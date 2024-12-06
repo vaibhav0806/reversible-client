@@ -26,7 +26,7 @@ export default function RootLayout(props: { children: ReactNode }) {
     <html lang="en">
       <body className={inter.className}>
         <Providers initialState={initialState}>
-          <GoogleOAuthProvider clientId={"924912220185-pkj4g095ctqmk2ajct469ldbh89bgh43.apps.googleusercontent.com"}>
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
             <Navbar />
             {props.children}
           </GoogleOAuthProvider>
