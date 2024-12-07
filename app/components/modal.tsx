@@ -67,7 +67,7 @@ export function Modal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Mint Reversible Tokens</Button>
+        <Button variant="outline" className="text-black">Mint Reversible Tokens</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
