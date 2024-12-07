@@ -49,11 +49,12 @@ const STATUS_CONFIGS = {
 export default function ProfilePage() {
   const { toast } = useToast()
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'transfers' | 'issues'>('transfers');
+  const [activeTab, setActiveTab] = useState<'sent' | 'received' | 'issues'>('sent');
   
   // State for dynamic data
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [transferHistory, setTransferHistory] = useState<Transaction[]>([]);
+  const [sentTransferHistory, setSentTransferHistory] = useState<Transaction[]>([]);
+  const [receivedTransferHistory, setReceivedTransferHistory] = useState<Transaction[]>([]);
   const [userDisputes, setUserDisputes] = useState<Dispute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,7 +70,8 @@ export default function ProfilePage() {
         // Fetch all required data
         Promise.all([
           fetchWalletBalances(walletAddress),
-          fetchTransactionHistory(walletAddress),
+          fetchSentTransactionHistory(walletAddress),
+          fetchReceivedTransactionHistory(walletAddress),
           fetchUserDisputes(walletAddress)
         ]).finally(() => setIsLoading(false));
       } catch (error) {
@@ -129,10 +131,10 @@ export default function ProfilePage() {
     }
   };
 
-  const fetchTransactionHistory = async (walletAddress: string) => {
+  const fetchSentTransactionHistory = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-transactions/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -148,13 +150,44 @@ export default function ProfilePage() {
       const responseData = await response.json();
       
       if (responseData.status === "success") {
-        setTransferHistory(responseData.data);
+        setSentTransferHistory(responseData.data);
       }
     } catch (error) {
-      console.error("Error fetching transaction history:", error);
+      console.error("Error fetching sent transaction history:", error);
       toast({
         title: "Error",
-        description: "Could not fetch transaction history",
+        description: "Could not fetch sent transaction history",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchReceivedTransactionHistory = async (walletAddress: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-received-transactions/${walletAddress}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      
+      if (responseData.status === "success") {
+        setReceivedTransferHistory(responseData.data);
+      }
+    } catch (error) {
+      console.error("Error fetching received transaction history:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch received transaction history",
         variant: "destructive"
       });
     }
@@ -259,12 +292,20 @@ export default function ProfilePage() {
           {/* Tabs */}
           <div className="flex justify-center space-x-4 mb-8">
             <Button
-              variant={activeTab === 'transfers' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('transfers')}
-              className={`bg-gradient-to-r ${activeTab === 'transfers' ? 'from-emerald-400 to-green-500 text-white' : ''}`}
+              variant={activeTab === 'sent' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('sent')}
+              className={`bg-gradient-to-r ${activeTab === 'sent' ? 'from-emerald-400 to-green-500 text-white' : ''}`}
             >
               <History className="w-4 h-4" />
-              <span>Transfer History</span>
+              <span>Sent Transfers</span>
+            </Button>
+            <Button
+              variant={activeTab === 'received' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('received')}
+              className={`bg-gradient-to-r ${activeTab === 'received' ? 'from-blue-400 to-blue-500 text-white' : ''}`}
+            >
+              <History className="w-4 h-4" />
+              <span>Received Transfers</span>
             </Button>
             <Button
               variant={activeTab === 'issues' ? 'default' : 'outline'}
@@ -277,14 +318,14 @@ export default function ProfilePage() {
           </div>
 
           {/* Content */}
-          {activeTab === 'transfers' && (
+          {activeTab === 'sent' && (
             <div className="space-y-6">
-              {transferHistory.length === 0 ? (
+              {sentTransferHistory.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  No transfer history found.
+                  No sent transfers found.
                 </div>
               ) : (
-                transferHistory.map((transfer) => (
+                sentTransferHistory.map((transfer) => (
                   <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6 flex justify-between items-center">
                       <div>
@@ -320,7 +361,50 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {activeTab === 'issues' && (
+          {activeTab === 'received' && (
+            <div className="space-y-6">
+              {receivedTransferHistory.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  No received transfers found.
+                </div>
+              ) : (
+                receivedTransferHistory.map((transfer) => (
+                  <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6 flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold">{transfer.amount} NR</p>
+                        <Badge
+                          variant="outline"
+                          className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
+                        >
+                          {transfer.state}
+                        </Badge>
+                        <p className="text-sm text-gray-500 mt-1">
+                          From: {transfer.from_wallet}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDate(transfer.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        {transfer.state === 'pending' && (
+                          <Button 
+                          className="bg-red-500 text-white hover:bg-red-600" 
+                          onClick={() => handleDispute(transfer.id)}
+                        >
+                          Reverse
+                        </Button>
+                      )}
+                      {STATUS_CONFIGS[transfer.state]?.icon}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
+{activeTab === 'issues' && (
             <div className="space-y-6">
               {userDisputes.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
