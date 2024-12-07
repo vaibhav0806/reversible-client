@@ -8,7 +8,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { cookieToInitialState } from 'wagmi';
 import { config } from './config';
 import { Providers } from './providers';
-import { Navbar } from './components/navbar';
 import { NavbarN } from './components/navbar-next';
 import { Toaster } from "@/components/ui/toaster"
 
@@ -28,7 +27,7 @@ export default function RootLayout(props: { children: ReactNode }) {
     <html lang="en">
       <body className={inter.className}>
         <Providers initialState={initialState}>
-          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string}>
             {/* <Navbar /> */}
             <NavbarN />
             {props.children}

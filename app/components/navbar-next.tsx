@@ -152,6 +152,9 @@ export function NavbarN() {
         }
     };
 
+    const isValidAddress = (address: string | null): address is `0x${string}` =>
+        typeof address === "string" && address.startsWith("0x");
+
     const handleTransfer = async () => {
         // Convert amount to number for comparison
         const transferAmount = parseFloat(amount);
@@ -277,7 +280,7 @@ export function NavbarN() {
                     <p className="font-bold text-inherit tracking-wider">REVERS</p>
                 </a>
             </NavbarBrand>
-            <NavbarContent className="hidden sm:flex gap-7" justify="center">
+            <NavbarContent className="sm:flex gap-7" justify="center">
                 <NavbarItem isActive={pathname === "/dao"}>
                     <Link
                         href="/dao"
@@ -312,7 +315,10 @@ export function NavbarN() {
                         <div className="flex items-center gap-2">
                             <Drawer>
                                 <DrawerTrigger>
-                                    <Identity address={walletAddress} className="py-2 rounded-lg">
+                                    <Identity
+                                        address={isValidAddress(walletAddress) ? walletAddress : undefined}
+                                        className="py-2 rounded-lg"
+                                    >
                                         <Avatar />
                                         <Name className="font-bold" />
                                     </Identity>
@@ -466,8 +472,8 @@ export function NavbarN() {
                 ) : (
                     <GoogleLogin
                         onSuccess={handleGoogleLogin}
-                        onError={(error: any) => {
-                            console.log("Login Failed", error);
+                        onError={() => {
+                            console.log("Login Failed");
                         }}
                         useOneTap
                         promptMomentNotification={(notification) =>

@@ -16,7 +16,19 @@ import {
 import { Info, AlertCircle, Wallet } from "lucide-react";
 import { CircleHelp } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { request } from "http";
+
+interface Transaction {
+  id: string;
+  from_wallet: string;
+  to_wallet: string;
+  amount: number;
+  created_at: string;
+  state: string;
+  sender: string;
+  receiver: string;
+  timestamp: Date;
+  status: string;
+}
 
 // Utility function to calculate reversible until date
 const calculateReversibleUntil = (transactionDate: Date): Date => {
