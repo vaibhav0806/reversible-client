@@ -1,106 +1,3 @@
-// 'use client';
-
-// import React, { useEffect, useState } from 'react';
-// import { useRouter, usePathname, useSearchParams } from 'next/navigation'; // Correct imports
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
-// import { format } from 'date-fns';
-
-// interface Dispute {
-//   id: number;
-//   created_at: string;
-//   updated_at: string;
-//   to_wallet: string;
-//   proof_title: string;
-//   transactionId: number;
-//   verdict: boolean;
-//   proof_content: string;
-//   dispute_count: string;
-// }
-
-// const DisputeDetailPage = () => {
-//   const router = useRouter();
-//   const pathname = usePathname(); // Get the current pathname
-//   const searchParams = useSearchParams(); // Get the query parameters
-//   const id = searchParams.get('id'); // Extract 'id' from query params
-
-//   const [dispute, setDispute] = useState<Dispute | null>(null);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     if (id) {
-//       const fetchDispute = async () => {
-//         try {
-//           const response = await fetch(`https://automatic-gavrielle-dhrupad-c45bfb75.koyeb.app/disputes/get-dispute/${id}`);
-//           const responseWait = await response.json();
-//           const data = responseWait.data[0];
-
-//           if (response.ok) {
-//             setDispute(data);
-//             console.log(data)
-//           } else {
-//             console.error('Error fetching dispute:', data);
-//           }
-//         } catch (error) {
-//           console.error('Error fetching dispute data:', error);
-//         } finally {
-//           setIsLoading(false);
-//         }
-//       };
-
-//       fetchDispute();
-//     }
-//   }, [id]);
-
-//   if (isLoading) {
-//     return (
-//       <div className="container mx-auto px-4 py-12">
-//         <p>Loading dispute data...</p>
-//       </div>
-//     );
-//   }
-
-//   if (!dispute) {
-//     return (
-//       <div className="container mx-auto px-4 py-12">
-//         <p>Dispute not found.</p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container mx-auto px-4 py-12 max-w-5xl">
-//       <Card>
-//         <CardContent>
-//           <h1 className="text-2xl font-semibold mb-4">{dispute.proof_title}</h1>
-//           <p className="text-gray-600 mb-4">{dispute.proof_content}</p>
-//           <div className="mb-4">
-//             <strong>Wallet Address:</strong> {dispute.to_wallet}
-//           </div>
-//           <div className="mb-4">
-//             <strong>Transaction Amount:</strong> {dispute.dispute_count} ETH
-//           </div>
-//           <div className="mb-4">
-//             <strong>Transaction ID:</strong> {dispute.transactionId}
-//           </div>
-//           <div className="flex justify-between items-center">
-//             <Badge className={dispute.verdict ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-//               {dispute.verdict ? 'Resolved' : 'Active'}
-//             </Badge>
-//             <span className="text-sm text-gray-500">
-//               {dispute.created_at}
-//             </span>
-//           </div>
-//           <Button onClick={() => router.push('/dao')} className="mt-4">Back to Disputes</Button>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// };
-
-// export default DisputeDetailPage;
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -141,19 +38,25 @@ interface Dispute {
 interface Transaction {
   id: number;
   amount: number;
-  fromAddress: string;
-  toAddress: string;
-  transactionTime: string;
+  from_wallet: string;
+  to_wallet: string;
+  created_at: string;
+  state: string;
 }
 
-interface DisputePageProps {
-  isJudge?: boolean;
+type Props = {
+  params: {
+    id: string;
+  }
 }
 
-const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
+const DisputePage = ({ params}: Props) => {
+  console.log(params.id);
   const [dispute, setDispute] = useState<Dispute | null>(null);
+  const [isJudge, setIsJudge] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [votes, setVotes] = useState<any>(null)
   const [senderTransactions, setSenderTransactions] = useState<Transaction[]>(
     []
   );
@@ -165,16 +68,51 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
   );
   const [activeTab, setActiveTab] = useState("sender-history");
 
-  const router = useRouter();
-  const pathname = usePathname(); // Get the current pathname
-  const searchParams = useSearchParams(); // Get the query parameters
-  const disputeId = searchParams.get("id"); // Extract 'id' from query params
-
   // Voting data (mock for now)
   const [votingData, setVotingData] = useState({
     yes: 65,
     no: 35,
   });
+
+  useEffect(() => {
+    const fetchSenderTransactionHistory = async () => {
+      const response = await fetch(
+        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.from_wallet}`
+      );
+      const responseWait = await response.json();
+      const data = responseWait.data.slice(0, 5)
+      setSenderTransactions(data)
+      console.log(data)
+  
+      const response2 = await fetch(
+        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.from_wallet}`
+      );
+      const responseWait2 = await response2.json();
+      const data2 = responseWait2.data.slice(0, 5);
+      console.log(data2)
+      setSenderTransactions([...data, data2]);
+    }
+  
+    const fetchReceiverTransactionHistory = async () => {
+      const response = await fetch(
+        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.to_wallet}`
+      );
+      const responseWait = await response.json();
+      const data = responseWait.data.slice(0, 5)
+      console.log(data)
+      setReceiverTransactions(data)
+  
+      const response2 = await fetch(
+        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.to_wallet}`
+      );
+      const responseWait2 = await response2.json();
+      const data2 = responseWait2.data.slice(0, 5)
+      console.log(data2)
+      setReceiverTransactions([...data, data2])
+    }
+    fetchSenderTransactionHistory()
+    fetchReceiverTransactionHistory()
+  }, [transaction])
 
   // Function to check if voting period is over
   const isVotingPeriodComplete = (createdAt: string) => {
@@ -185,18 +123,20 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
 
   // Similar data fetching logic as before (kept for context)
   useEffect(() => {
-    if (disputeId) {
-      const fetchDispute = async () => {
+    const fetchDispute = async () => {
+      if (params.id) {
         try {
+          console.log("get dispute")
           const response = await fetch(
-            `https://automatic-gavrielle-dhrupad-c45bfb75.koyeb.app/disputes/get-dispute/${disputeId}`
+            `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/get-dispute/${params.id}`
           );
           const responseWait = await response.json();
           const data = responseWait.data[0];
-
+          console.log("dispute is : ", data)
+  
           if (response.ok) {
             setDispute(data);
-            console.log(data);
+            // console.log(data);
           } else {
             console.error("Error fetching dispute:", data);
           }
@@ -205,43 +145,174 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
         } finally {
           setIsLoading(false);
         }
-      };
+      }
+    };
 
-      fetchDispute();
+    fetchDispute();
+  }, [, params.id]);
+
+  useEffect(() => {
+    const fetchVotes = async () => {
+      try {
+        console.log("get votes")
+        // console.log(dispute)
+        const response = await fetch(
+          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/getVotes/${dispute?.id}`
+        );
+        const responseWait = await response.json();
+        const data = responseWait.data[0];
+        console.log("votes is : ", data)
+  
+        if (response.ok) {
+          setVotes(data);
+          // console.log(data);
+        } else {
+          console.error("Error fetching votes:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching votes data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    
-  }, [disputeId]);
+
+    fetchVotes()
+  }, [dispute])
+
+  const vote = async () => {
+    try {
+      console.log("get vote")
+      const payload = {
+        "wallet": {
+          "address_id": JSON.parse(localStorage.getItem("walletData")!).address_id,
+          "wallet_id": JSON.parse(localStorage.getItem("walletData")!).wallet_id,
+          "network_id": JSON.parse(localStorage.getItem("walletData")!).network_id
+        },
+        "request": {
+          "dispute_id": dispute?.id,
+          "vote": voteDecision
+        }
+      } 
+      // console.log("payload is : ", payload)
+      const response = await fetch(
+        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/judges/vote`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+      const responseWait = await response.json();
+      console.log("vote is :", responseWait);
+
+      if (response.ok) {
+        // console.log(responseWait);
+      } else {
+        console.error("Error fetching vote:", responseWait);
+      }
+    } catch (error) {
+      console.error("Error fetching vote data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      try {
+        console.log("get transaction")
+        // console.log(dispute)
+        const response = await fetch(
+          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/transactions/get-transactions/${dispute?.transactionId}`
+        );
+        const responseWait = await response.json();
+        const data = responseWait.data[0];
+        console.log("transaction is : ", data)
+
+        if (response.ok) {
+          setTransaction(data);
+          // console.log(data);
+        } else {
+          console.error("Error fetching dispute:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching dispute data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchTransaction()
+  }, [dispute]);
+
+  useEffect(() => {
+    const fetchIsJudge = async () => {
+      try {
+        console.log("get judge")
+        const payload = {
+          "address_id": JSON.parse(localStorage.getItem("walletData")!).address_id,
+          "wallet_id": JSON.parse(localStorage.getItem("walletData")!).wallet_id,
+          "network_id": JSON.parse(localStorage.getItem("walletData")!).network_id
+        }
+        // console.log("payload is : ", payload)
+        const response = await fetch(
+          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/isJudge`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify(payload)
+          }
+        );
+        const responseWait = await response.json();
+        console.log("judge is :", responseWait);
+
+        if (response.ok) {
+          // console.log(responseWait);
+        } else {
+          console.error("Error fetching dispute:", responseWait);
+        }
+      } catch (error) {
+        console.error("Error fetching dispute data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchIsJudge()
+  }, [transaction])
 
   const formatWalletAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    if (address)
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const renderTransactionHistory = (transactions: Transaction[]) => {
-    return transactions.map((tx) => (
+    return transactions.map((tx: any) => (
       <Card key={tx.id} className="mb-2">
         <CardContent className="p-4">
           <div className="flex justify-between">
             <div>
               <p className="text-sm font-medium">
-                {formatWalletAddress(tx.fromAddress)} →{" "}
-                {formatWalletAddress(tx.toAddress)}
+                {formatWalletAddress(tx.from_wallet)} →{" "}
+                {formatWalletAddress(tx.to_wallet)}
               </p>
               <p className="text-xs text-gray-500">
-                {new Date(tx.transactionTime).toLocaleString()}
+                {new Date(tx.created_at).toLocaleString()}
               </p>
             </div>
             <div className="text-right">
-              <p className="font-semibold">${tx.amount.toLocaleString()}</p>
+              <p className="font-semibold">${tx.amount}</p>
             </div>
           </div>
         </CardContent>
       </Card>
     ));
-  };
-
-  const handleSubmitVote = () => {
-    // TODO: Implement actual vote submission logic
-    console.log(`Voting ${voteDecision} for dispute ${dispute?.id}`);
   };
 
   if (!dispute) return <div>Loading...</div>;
@@ -277,21 +348,24 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
               <CardTitle>Transaction Details</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Previous transaction details content */}
+              {transaction ? 
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Amount:</span>
-                  <span>$500</span>
+                  <span>{transaction?.amount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>From:</span>
-                  <span>0x1234...5678</span>
+                  <span>{transaction?.from_wallet.slice(0, 6)+'...'+transaction?.from_wallet.slice(transaction?.from_wallet.length-5, transaction?.from_wallet.length)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>To:</span>
-                  <span>0x8765...4321</span>
+                  <span>{transaction?.to_wallet.slice(0, 6)+'...'+transaction?.to_wallet.slice(transaction?.to_wallet.length-5, transaction?.to_wallet.length)}</span>
                 </div>
               </div>
+              :
+              <>hello</>
+              }
             </CardContent>
           </Card>
 
@@ -376,18 +450,27 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
                   </TabsList>
 
                   {/* Sender Transaction History Tab */}
+                  {senderTransactions.length > 0 ? 
                   <TabsContent value="sender-history">
                     <div className="max-h-[400px] overflow-y-auto">
                       {renderTransactionHistory(senderTransactions)}
                     </div>
                   </TabsContent>
+                  :
+                  <></>
+                  }
 
                   {/* Receiver Transaction History Tab */}
+                  
+                  {receiverTransactions.length > 0 ?
                   <TabsContent value="receiver-history">
                     <div className="max-h-[400px] overflow-y-auto">
                       {renderTransactionHistory(receiverTransactions)}
                     </div>
                   </TabsContent>
+                  :
+                  <></>
+                  }
 
                   {/* Vote Selection Tab */}
                   <TabsContent value="vote-selection">
@@ -412,7 +495,7 @@ const DisputePage: React.FC<DisputePageProps> = ({ isJudge = true }) => {
                         </div>
                       </RadioGroup>
 
-                      <Button onClick={handleSubmitVote} className="w-full">
+                      <Button onClick={vote} className="w-full">
                         Submit Vote
                       </Button>
                     </div>
