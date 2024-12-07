@@ -657,7 +657,6 @@ export function NavbarN() {
         setAmount("");
 
         // Navigate to profile page
-        setIsTransferring(false);
         router.push('/profile');
         
       } else {
