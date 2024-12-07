@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useRouter, useParams } from 'next/navigation';
 
 interface DisputeData {
   status: 'active' | 'closed';
@@ -20,27 +21,39 @@ interface DisputeData {
 }
 
 const DisputePage: React.FC = () => {
-  const [dispute, setDispute] = useState<DisputeData>({
-    status: new Date() <= new Date('2024-08-15') ? 'active' : 'closed',
-    title: 'Unauthorized Transaction Dispute',
-    walletAddress: '0x1234567890abcdef1234567890abcdef',
-    claimContent: 'I noticed an unauthorized transaction on my account on July 15th. The transaction was for $500 and I did not authorize this purchase.',
-    startDate: new Date('2024-07-15'),
-    endDate: new Date('2024-08-15'),
-    transactionAmount: 500,
-    voting: {
-      yes: 65,
-      no: 35
+  const [dispute, setDispute] = useState<DisputeData | null>(null);
+  const router = useRouter();
+  const params = useParams();
+
+  useEffect(() => {
+    // Retrieve dispute data from localStorage
+    const storedDispute = localStorage.getItem('currentDispute');
+    
+    if (storedDispute) {
+      const parsedDispute = JSON.parse(storedDispute);
+      // Convert date strings back to Date objects
+      parsedDispute.startDate = new Date(parsedDispute.startDate);
+      parsedDispute.endDate = new Date(parsedDispute.endDate);
+      
+      setDispute(parsedDispute);
+    } else {
+      // If no dispute data in localStorage, redirect back to disputes page
+      router.push('/disputes');
     }
-  });
+
+    // Clean up localStorage after retrieving the data
+    return () => {
+      localStorage.removeItem('currentDispute');
+    };
+  }, [router]);
 
   const formatWalletAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const isVotingClosed = useMemo(() => {
-    return new Date() > dispute.endDate;
-  }, [dispute.endDate]);
+    return dispute ? new Date() > dispute.endDate : false;
+  }, [dispute]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -49,6 +62,15 @@ const DisputePage: React.FC = () => {
       day: 'numeric'
     });
   };
+
+  // Loading state
+  if (!dispute) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
