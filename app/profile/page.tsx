@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, History, CircleAlert, CircleCheck, CircleHelp, Undo2 } from 'lucide-react';
+import { Wallet, History, CircleAlert, CircleCheck, CircleHelp, Undo2, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation';
 import { Toaster } from "@/components/ui/toaster";
@@ -57,6 +57,9 @@ export default function ProfilePage() {
   const [receivedTransferHistory, setReceivedTransferHistory] = useState<Transaction[]>([]);
   const [userDisputes, setUserDisputes] = useState<Dispute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [walletData, setWalletData] = useState<any>(null);
+  const [isForcing, setIsForcing] = useState<boolean>(false);
+
 
   useEffect(() => {
     // Retrieve wallet address from local storage
@@ -65,6 +68,8 @@ export default function ProfilePage() {
     if (storedWalletData) {
       try {
         const parsedWalletData = JSON.parse(storedWalletData);
+        setWalletData(parsedWalletData);
+
         const walletAddress = parsedWalletData.address_id;
 
         // Fetch all required data
@@ -92,6 +97,131 @@ export default function ProfilePage() {
       setIsLoading(false);
     }
   }, []);
+
+   
+
+  const isClaimButtonEnabled = (transactionCreatedAt: string): boolean => {
+    const transactionTime = new Date(transactionCreatedAt).getTime();
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - transactionTime;
+    
+    // 12 hours in milliseconds = 12 * 60 * 60 * 1000
+    const twelveHoursInMs =  60 * 1000;
+    
+    return timeDifference > twelveHoursInMs;
+  };
+
+  const handleWithdraw = async (transaction: Transaction) => {
+    try {
+      const   storedWalletData = localStorage.getItem('walletData');
+      if (!storedWalletData) {
+        throw new Error('No wallet data found');
+      }
+      // console.log(transaction);
+
+      const id = transaction.id.toString();
+
+      console.log(storedWalletData);
+      console.log(typeof(transaction.to_wallet),   typeof(id));
+      
+      setIsForcing(true)
+      
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/force-approval`,
+        {
+          method: "POST", 
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+             wallet:walletData,
+             request:{
+              transaction_id:id,
+              to_wallet:transaction.to_wallet
+             }
+          })
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (responseData.status === "success") {
+        toast({
+          title: "Success",
+          description: "Transaction withdrawn successfully",
+          variant: "default"
+        });
+        
+        
+    }} catch (error) {
+      console.error("Error withdrawing transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Could not withdraw transaction",
+        variant: "destructive"
+      });
+    }
+    finally{
+      setIsForcing(false)
+    }
+  };
+
+
+  const handleClaim = async (transferId: number) => {
+    try {
+      const storedWalletData = localStorage.getItem('walletData');
+      if (!storedWalletData) {
+        throw new Error('No wallet data found');
+      }
+
+      const parsedWalletData = JSON.parse(storedWalletData);
+      // console.log(transfer);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/claim`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+          body: JSON.stringify({
+            wallet: parsedWalletData,
+            request:{
+              transaction_id: transferId.toString()
+            }
+          })
+        }
+      );
+
+      const responseData = await response.json();
+
+      console.log(responseData);
+      
+
+      if (responseData.status === "success") {
+        toast({
+          title: "Success",
+          description: "Transaction claimed successfully",
+          variant: "default"
+        });
+        
+        // Optionally refresh the transaction     
+      } else {
+        throw new Error(responseData.message || "Failed to claim transaction");
+      }
+    } catch (error) {
+      console.error("Error claiming transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Could not claim transaction",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
@@ -257,7 +387,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-center text-lg font-semibold bg-gradient-to-r from-emerald-400 to-green-500 text-white py-2 rounded-md">
             User Profile
@@ -346,12 +476,30 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center space-x-4">
                         {transfer.state === 'pending' && (
-                          <Button 
+                          <>
+                           <Button 
                             className="bg-red-500 text-white hover:bg-red-600" 
                             onClick={() => handleDispute(transfer)}
                           >
                             Reverse
                           </Button>
+                          <Button 
+                          className="bg-blue-500 text-white hover:bg-blue-600" 
+                          onClick={() => handleWithdraw(transfer)}
+                        >
+
+{isForcing ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Loading...
+                                </>
+                              ) : (
+                                "Force"
+                              )}
+                          
+                        </Button>
+                          </>
+                         
                         )}
                         {STATUS_CONFIGS[transfer.state]?.icon}
                       </div>
@@ -362,48 +510,53 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {activeTab === 'received' && (
-            <div className="space-y-6">
-              {receivedTransferHistory.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  No received transfers found.
-                </div>
-              ) : (
-                receivedTransferHistory.map((transfer) => (
-                  <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6 flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">{transfer.amount} NR</p>
-                        <Badge
-                          variant="outline"
-                          className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
-                        >
-                          {transfer.state}
-                        </Badge>
-                        <p className="text-sm text-gray-500 mt-1">
-                          From: {transfer.from_wallet}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {formatDate(transfer.created_at)}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        {transfer.state === 'pending' && (
-                          <Button 
-                          className=" bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600" 
-                          onClick={() => handleDispute(transfer.id)}
-                        >
-                          Claim
-                        </Button>
-                      )}
-                      {STATUS_CONFIGS[transfer.state]?.icon}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
+{activeTab === 'received' && (
+    <div className="space-y-6">
+      {receivedTransferHistory.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          No received transfers found.
+        </div>
+      ) : (
+        receivedTransferHistory.map((transfer) => (
+          <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{transfer.amount} NR</p>
+                <Badge
+                  variant="outline"
+                  className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
+                >
+                  {transfer.state}
+                </Badge>
+                <p className="text-sm text-gray-500 mt-1">
+                  From: {transfer.from_wallet}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {formatDate(transfer.created_at)}
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                {transfer.state === 'pending' && (
+                  <Button 
+                    className={`
+                      bg-gradient-to-r from-emerald-400 to-green-500 
+                      hover:from-emerald-500 hover:to-green-600
+                      ${!isClaimButtonEnabled(transfer.created_at) ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                    onClick={() => isClaimButtonEnabled(transfer.created_at) && handleClaim(transfer.id)}
+                    disabled={!isClaimButtonEnabled(transfer.created_at)}
+                  >
+                    Claim
+                  </Button>
+                )}
+                {STATUS_CONFIGS[transfer.state]?.icon}
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  )}
 
 {activeTab === 'issues' && (
             <div className="space-y-6">
