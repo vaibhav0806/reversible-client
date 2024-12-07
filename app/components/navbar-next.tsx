@@ -280,7 +280,7 @@ export function NavbarN() {
                     <p className="font-bold text-inherit tracking-wider">REVERS</p>
                 </a>
             </NavbarBrand>
-            <NavbarContent className="hidden sm:flex gap-7" justify="center">
+            <NavbarContent className="sm:flex gap-7" justify="center">
                 <NavbarItem isActive={pathname === "/dao"}>
                     <Link
                         href="/dao"
