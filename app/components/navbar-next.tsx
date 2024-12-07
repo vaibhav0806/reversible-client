@@ -77,52 +77,55 @@ export function NavbarN() {
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
 
-  // Fetch wallet balances
-
   const handleGoogleLogin = async (credentialResponse: any) => {
     if (credentialResponse.credential) {
-        try {
-            const decodedCredential = jwtDecode<GoogleUserData>(credentialResponse.credential);
+      try {
+        const decodedCredential = jwtDecode<GoogleUserData>(
+          credentialResponse.credential
+        );
 
-            // Store user data in local storage
-            localStorage.setItem('userData', JSON.stringify(decodedCredential));
+        // Store user data in local storage
+        localStorage.setItem("userData", JSON.stringify(decodedCredential));
 
-            // Set user data to state (assuming setUserData is defined)
-            setUserData(decodedCredential);
+        // Set user data to state (assuming setUserData is defined)
+        setUserData(decodedCredential);
 
-            console.log("User Details:", decodedCredential);
+        console.log("User Details:", decodedCredential);
 
-            // Call the API
-            const response = await fetch('http://127.0.0.1:8000/auth/create-wallet', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ email: decodedCredential.email }),
-            });
+        // Call the API
+        const response = await fetch(
+          "http://127.0.0.1:8000/auth/create-wallet",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ email: decodedCredential.email }),
+          }
+        );
 
-            if (!response.ok) {
-                throw new Error();
-            }
-
-            const responseData = await response.json();
-
-            const walletData = {
-              address_id: responseData.response.data[0].wallet_address,
-              wallet_id: responseData.response.data[0].wallet_id,
-              network_id: responseData.response.data[0].network_id
-            }
-
-            setWalletData(walletData);
-            localStorage.setItem('walletData', JSON.stringify(walletData));
-            setWalletAddress(walletData.address_id);
-            console.log("Wallet Data", walletData);
-        } catch (error) {
-            console.error("Error:", error);
+        if (!response.ok) {
+          throw new Error();
         }
+
+        const responseData = await response.json();
+
+        const walletData = {
+          address_id: responseData.response.data[0].wallet_address,
+          wallet_id: responseData.response.data[0].wallet_id,
+          network_id: responseData.response.data[0].network_id,
+        };
+
+        setWalletData(walletData);
+        localStorage.setItem("walletData", JSON.stringify(walletData));
+        setWalletAddress(walletData.address_id);
+        console.log("Wallet Data", walletData);
+      } catch (error) {
+        console.error("Error:", error);
+      }
     }
-};
+  };
 
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
@@ -149,7 +152,7 @@ export function NavbarN() {
     }
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     // Convert amount to number for comparison
     const transferAmount = parseFloat(amount);
 
@@ -174,11 +177,33 @@ export function NavbarN() {
       return;
     }
 
+    const response = await fetch(
+      "http://127.0.0.1:8000/transactions/transfer",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          wallet: walletData,
+          transfer: {
+            to_wallet: recipientAddress,
+            amount: amount,
+          },
+        }),
+      }
+    );
+
+    console.log(response)
+    if (response.status==200) {
+      toast({
+        title: "Transfer Completed",
+        description: `Transfer of ${amount} transferred to ${walletAddress}`,
+      });
+    }
+
     // If all validations pass
-    toast({
-      title: "Transfer Initiated",
-      description: "Transfer in progress...",
-    });
     console.log("Transfer initiated", { recipientAddress, amount });
   };
 
@@ -391,14 +416,16 @@ export function NavbarN() {
           </div>
         ) : (
           <GoogleLogin
-          onSuccess={handleGoogleLogin}
-          onError={(error: any) => {
-            console.log("Login Failed", error);
-          }}
-          useOneTap
-          promptMomentNotification={(notification) => console.log("Prompt moment notification:", notification)}
-        />
-      )}
+            onSuccess={handleGoogleLogin}
+            onError={(error: any) => {
+              console.log("Login Failed", error);
+            }}
+            useOneTap
+            promptMomentNotification={(notification) =>
+              console.log("Prompt moment notification:", notification)
+            }
+          />
+        )}
       </NavbarContent>
     </Navbar>
   );
