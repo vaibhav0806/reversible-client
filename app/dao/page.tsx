@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Import from next/navigation
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ interface Dispute {
 }
 
 export default function DAODisputesPage() {
-  const router = useRouter();
+  const router = useRouter(); // Use router from next/navigation
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -85,6 +85,11 @@ export default function DAODisputesPage() {
 
   const truncateDescription = (description: string, maxLength = 200) => {
     return description.length > maxLength ? `${description.slice(0, maxLength)}...` : description;
+  };
+
+  const handleDisputeClick = (dispute: Dispute) => {
+    // Use next/navigation router to navigate with query parameters
+    router.push(`/dispute/${dispute.id}?id=${dispute.id}`);
   };
 
   if (isLoading) {
@@ -152,7 +157,11 @@ export default function DAODisputesPage() {
 
       <div className="space-y-4">
         {filteredDisputes.map((dispute) => (
-          <Card key={dispute.id} className="transition mx-auto max-w-4xl">
+          <Card 
+            key={dispute.id} 
+            className="transition mx-auto max-w-4xl cursor-pointer hover:bg-gray-50"
+            onClick={() => handleDisputeClick(dispute)}
+          >
             <CardContent>
               <h3 className="font-semibold text-lg mb-2 py-2">{dispute.proof_title}</h3>
               <p className="text-gray-600">{truncateDescription(dispute.proof_content)}</p>
