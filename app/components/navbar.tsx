@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { Address, Avatar, Identity, Name } from '@coinbase/onchainkit/identity';
+import {Button as ButtonNextUI} from "@nextui-org/button";
 import {
   GoogleLogin,
   GoogleOAuthProvider,

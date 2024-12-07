@@ -9,6 +9,8 @@ import { cookieToInitialState } from 'wagmi';
 import { config } from './config';
 import { Providers } from './providers';
 import { Navbar } from './components/navbar';
+import { NavbarN } from './components/navbar-next';
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,10 +29,12 @@ export default function RootLayout(props: { children: ReactNode }) {
       <body className={inter.className}>
         <Providers initialState={initialState}>
           <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-            <Navbar />
+            {/* <Navbar /> */}
+            <NavbarN />
             {props.children}
           </GoogleOAuthProvider>
         </Providers>
+        <Toaster />
       </body>
     </html>
   );

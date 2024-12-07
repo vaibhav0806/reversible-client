@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@coinbase/onchainkit": "^0.35.8",
+    "@nextui-org/react": "^2.6.2",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -18,10 +19,12 @@
     "@radix-ui/react-popover": "^1.1.2",
     "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.1.4",
     "@react-oauth/google": "^0.12.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^11.13.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.468.0",
     "next": "14.2.16",
@@ -29,6 +32,7 @@
     "react-dom": "^18",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.1",
     "wagmi": "^2.13.4"
   },
   "devDependencies": {
