@@ -263,6 +263,7 @@ export function NavbarN() {
 
   const handleLogout = () => {
     localStorage.removeItem("userData");
+    localStorage.removeItem("walletData");
     setUserData(null);
     googleLogout();
   };
