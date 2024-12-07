@@ -93,7 +93,7 @@ export function NavbarN() {
             console.log("User Details:", decodedCredential);
 
             // Call the API
-            const response = await fetch('http://127.0.0.1:8000/auth/create-wallet', {
+            const response = await fetch('https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/auth/create-wallet', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export function NavbarN() {
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-balance/${walletAddress}`,
+        `https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-balance/${walletAddress}`,
         {
           method: "GET",
           headers: {

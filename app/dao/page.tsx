@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Label } from "@/components/ui/label";
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Dispute {
   id: number;
@@ -33,20 +34,34 @@ interface Dispute {
 
 export default function DAODisputesPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDisputes = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/disputes/get-disputes');
+        const response = await fetch('https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/disputes/get-disputes');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
         const data = await response.json();
         if (data.status === 'success') {
           setDisputes(data.data);
         }
       } catch (error) {
         console.error('Error fetching disputes:', error);
+        toast({
+          title: "Error",
+          description: "Could not fetch disputes",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -76,6 +91,14 @@ export default function DAODisputesPage() {
   const truncateDescription = (description: string, maxLength = 200) => {
     return description.length > maxLength ? `${description.slice(0, maxLength)}...` : description;
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">

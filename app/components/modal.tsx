@@ -40,7 +40,7 @@ export function Modal() {
       };
 
       // Call the API
-      const response = await fetch("http://127.0.0.1:8000/users/deposit", {
+      const response = await fetch("https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/deposit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

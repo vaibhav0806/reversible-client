@@ -9,23 +9,6 @@ import { useRouter } from 'next/navigation';
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from '@/hooks/use-toast';
 
-export const ToastDemo = () => {
-  const { toast } = useToast()
- 
-  return (
-    <Button
-      onClick={() => {
-        toast({
-          title: "Scheduled: Catch up",
-          description: "Friday, February 10, 2023 at 5:57 PM",
-        })
-      }}
-    >
-      Show Toast
-    </Button>
-  )
-}
-
 // Type definitions for our data structures
 interface UserData {
   email: string;
@@ -111,7 +94,7 @@ export default function ProfilePage() {
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-balance/${walletAddress}`,
+        `https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-balance/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -149,7 +132,7 @@ export default function ProfilePage() {
   const fetchTransactionHistory = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-transactions/${walletAddress}`,
+        `https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-transactions/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -180,7 +163,7 @@ export default function ProfilePage() {
   const fetchUserDisputes = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-disputes/${walletAddress}`,
+        `/https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-disputes/${walletAddress}`,
         {
           method: "GET",
           headers: {
