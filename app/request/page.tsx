@@ -45,7 +45,7 @@ const TransactionReversalPage: React.FC = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [walletData, setWalletData] = useState<any>(null);
+  const [walletData, setWalletData] = useState<any>(null); 
  
   
 
