@@ -39,18 +39,32 @@ interface Dispute {
   dispute_count: string;
 }
 
-const STATUS_CONFIGS = {
-  completed: { color: 'bg-green-100 text-green-800 border-green-200', icon: <CircleCheck className="w-4 h-4 text-green-600" /> },
-  pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: <CircleHelp className="w-4 h-4 text-yellow-600" /> },
-  disputed: { color: 'bg-red-100 text-red-800 border-red-200', icon: <CircleAlert className="w-4 h-4 text-red-600" /> },
-  reversed: { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: <Undo2 className="w-4 h-4 text-gray-600" /> },
+type TransactionState = 'completed' | 'pending' | 'disputed' | 'reversed';
+
+const STATUS_CONFIGS: Record<TransactionState, { color: string; icon: JSX.Element }> = {
+  completed: {
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: <CircleCheck className="w-4 h-4 text-green-600" />,
+  },
+  pending: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <CircleHelp className="w-4 h-4 text-yellow-600" />,
+  },
+  disputed: {
+    color: 'bg-red-100 text-red-800 border-red-200',
+    icon: <CircleAlert className="w-4 h-4 text-red-600" />,
+  },
+  reversed: {
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: <Undo2 className="w-4 h-4 text-gray-600" />,
+  },
 };
 
 export default function ProfilePage() {
   const { toast } = useToast()
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'sent' | 'received' | 'issues'>('sent');
-  
+
   // State for dynamic data
   const [userData, setUserData] = useState<UserData | null>(null);
   const [sentTransferHistory, setSentTransferHistory] = useState<Transaction[]>([]);
@@ -64,7 +78,7 @@ export default function ProfilePage() {
   useEffect(() => {
     // Retrieve wallet address from local storage
     const storedWalletData = localStorage.getItem('walletData');
-    
+
     if (storedWalletData) {
       try {
         const parsedWalletData = JSON.parse(storedWalletData);
@@ -98,22 +112,22 @@ export default function ProfilePage() {
     }
   }, []);
 
-   
+
 
   const isClaimButtonEnabled = (transactionCreatedAt: string): boolean => {
     const transactionTime = new Date(transactionCreatedAt).getTime();
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - transactionTime;
-    
+
     // 12 hours in milliseconds = 12 * 60 * 60 * 1000
-    const twelveHoursInMs =  60 * 1000;
-    
+    const twelveHoursInMs = 60 * 1000;
+
     return timeDifference > twelveHoursInMs;
   };
 
   const handleWithdraw = async (transaction: Transaction) => {
     try {
-      const   storedWalletData = localStorage.getItem('walletData');
+      const storedWalletData = localStorage.getItem('walletData');
       if (!storedWalletData) {
         throw new Error('No wallet data found');
       }
@@ -122,25 +136,25 @@ export default function ProfilePage() {
       const id = transaction.id.toString();
 
       console.log(storedWalletData);
-      console.log(typeof(transaction.to_wallet),   typeof(id));
-      
+      console.log(typeof (transaction.to_wallet), typeof (id));
+
       setIsForcing(true)
-      
+
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/force-approval`,
         {
-          method: "POST", 
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             accept: "application/json",
           },
           body: JSON.stringify({
-             wallet:walletData,
-             request:{
-              transaction_id:id,
-              to_wallet:transaction.to_wallet
-             }
+            wallet: walletData,
+            request: {
+              transaction_id: id,
+              to_wallet: transaction.to_wallet
+            }
           })
         }
       );
@@ -153,9 +167,10 @@ export default function ProfilePage() {
           description: "Transaction withdrawn successfully",
           variant: "default"
         });
-        
-        
-    }} catch (error) {
+
+
+      }
+    } catch (error) {
       console.error("Error withdrawing transaction:", error);
       toast({
         title: "Error",
@@ -163,7 +178,7 @@ export default function ProfilePage() {
         variant: "destructive"
       });
     }
-    finally{
+    finally {
       setIsForcing(false)
     }
   };
@@ -189,7 +204,7 @@ export default function ProfilePage() {
           },
           body: JSON.stringify({
             wallet: parsedWalletData,
-            request:{
+            request: {
               transaction_id: transferId.toString()
             }
           })
@@ -199,7 +214,7 @@ export default function ProfilePage() {
       const responseData = await response.json();
 
       console.log(responseData);
-      
+
 
       if (responseData.status === "success") {
         toast({
@@ -207,7 +222,7 @@ export default function ProfilePage() {
           description: "Transaction claimed successfully",
           variant: "default"
         });
-        
+
         // Optionally refresh the transaction     
       } else {
         throw new Error(responseData.message || "Failed to claim transaction");
@@ -234,16 +249,16 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success" && responseData.data.length > 0) {
         const userBalanceData = responseData.data[0];
-        
+
         setUserData({
           email: userBalanceData.email,
           walletAddress: userBalanceData.wallet_address,
@@ -272,13 +287,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setSentTransferHistory(responseData.data);
       }
@@ -303,13 +318,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setReceivedTransferHistory(responseData.data);
       }
@@ -334,13 +349,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setUserDisputes(responseData.data);
       }
@@ -364,7 +379,7 @@ export default function ProfilePage() {
     });
   };
 
-  const handleDispute = (transaction : Transaction ) => {
+  const handleDispute = (transaction: Transaction) => {
     const transferData = encodeURIComponent(JSON.stringify(transaction))
     router.push(`/request?transactionId=${transaction.id}&transferData=${transferData}`);
   };
@@ -463,7 +478,7 @@ export default function ProfilePage() {
                         <p className="font-semibold">{transfer.amount} NR</p>
                         <Badge
                           variant="outline"
-                          className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
+                          className={`${STATUS_CONFIGS[transfer.state as TransactionState]?.color || ''} capitalize`}
                         >
                           {transfer.state}
                         </Badge>
@@ -477,18 +492,18 @@ export default function ProfilePage() {
                       <div className="flex items-center space-x-4">
                         {transfer.state === 'pending' && (
                           <>
-                           <Button 
-                            className="bg-red-500 text-white hover:bg-red-600" 
-                            onClick={() => handleDispute(transfer)}
-                          >
-                            Reverse
-                          </Button>
-                          <Button 
-                          className="bg-blue-500 text-white hover:bg-blue-600" 
-                          onClick={() => handleWithdraw(transfer)}
-                        >
+                            <Button
+                              className="bg-red-500 text-white hover:bg-red-600"
+                              onClick={() => handleDispute(transfer)}
+                            >
+                              Reverse
+                            </Button>
+                            <Button
+                              className="bg-blue-500 text-white hover:bg-blue-600"
+                              onClick={() => handleWithdraw(transfer)}
+                            >
 
-{isForcing ? (
+                              {isForcing ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                   Loading...
@@ -496,12 +511,12 @@ export default function ProfilePage() {
                               ) : (
                                 "Force"
                               )}
-                          
-                        </Button>
+
+                            </Button>
                           </>
-                         
+
                         )}
-                        {STATUS_CONFIGS[transfer.state]?.icon}
+                        {STATUS_CONFIGS[transfer.state as TransactionState]?.icon}
                       </div>
                     </CardContent>
                   </Card>
@@ -510,55 +525,55 @@ export default function ProfilePage() {
             </div>
           )}
 
-{activeTab === 'received' && (
-    <div className="space-y-6">
-      {receivedTransferHistory.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          No received transfers found.
-        </div>
-      ) : (
-        receivedTransferHistory.map((transfer) => (
-          <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6 flex justify-between items-center">
-              <div>
-                <p className="font-semibold">{transfer.amount} NR</p>
-                <Badge
-                  variant="outline"
-                  className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
-                >
-                  {transfer.state}
-                </Badge>
-                <p className="text-sm text-gray-500 mt-1">
-                  From: {transfer.from_wallet}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {formatDate(transfer.created_at)}
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                {transfer.state === 'pending' && (
-                  <Button 
-                    className={`
+          {activeTab === 'received' && (
+            <div className="space-y-6">
+              {receivedTransferHistory.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  No received transfers found.
+                </div>
+              ) : (
+                receivedTransferHistory.map((transfer) => (
+                  <Card key={transfer.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6 flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold">{transfer.amount} NR</p>
+                        <Badge
+                          variant="outline"
+                          className={`${STATUS_CONFIGS[transfer.state as TransactionState]?.color || ''} capitalize`}
+                        >
+                          {transfer.state}
+                        </Badge>
+                        <p className="text-sm text-gray-500 mt-1">
+                          From: {transfer.from_wallet}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDate(transfer.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        {transfer.state === 'pending' && (
+                          <Button
+                            className={`
                       bg-gradient-to-r from-emerald-400 to-green-500 
                       hover:from-emerald-500 hover:to-green-600
                       ${!isClaimButtonEnabled(transfer.created_at) ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
-                    onClick={() => isClaimButtonEnabled(transfer.created_at) && handleClaim(transfer.id)}
-                    disabled={!isClaimButtonEnabled(transfer.created_at)}
-                  >
-                    Claim
-                  </Button>
-                )}
-                {STATUS_CONFIGS[transfer.state]?.icon}
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </div>
-  )}
+                            onClick={() => isClaimButtonEnabled(transfer.created_at) && handleClaim(transfer.id)}
+                            disabled={!isClaimButtonEnabled(transfer.created_at)}
+                          >
+                            Claim
+                          </Button>
+                        )}
+                        {STATUS_CONFIGS[transfer.state as TransactionState]?.icon}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
 
-{activeTab === 'issues' && (
+          {activeTab === 'issues' && (
             <div className="space-y-6">
               {userDisputes.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
