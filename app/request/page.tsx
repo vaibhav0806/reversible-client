@@ -47,7 +47,6 @@ const TransactionReversalPage: React.FC = () => {
   const [message, setMessage] = useState("");
   const [walletData, setWalletData] = useState<any>(null); 
  
-  
 
   useEffect(() => {
     // Retrieve transaction ID and transfer data from route
