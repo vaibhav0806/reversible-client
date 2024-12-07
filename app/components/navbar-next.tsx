@@ -265,6 +265,7 @@ export function NavbarN() {
     localStorage.removeItem("userData");
     localStorage.removeItem("walletData");
     setUserData(null);
+    setWalletData(null);
     googleLogout();
   };
 
