@@ -175,7 +175,7 @@ export function NavbarN() {
     }
 
     const response = await fetch(
-      "http://127.0.0.1:8000/transactions/transfer",
+      `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/transfer`,
       {
         method: "POST",
         headers: {
