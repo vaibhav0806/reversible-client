@@ -40,7 +40,7 @@ export default function DAODisputesPage() {
   useEffect(() => {
     const fetchDisputes = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/disputes/get-disputes');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/disputes/get-disputes`);
         const data = await response.json();
         if (data.status === 'success') {
           setDisputes(data.data);

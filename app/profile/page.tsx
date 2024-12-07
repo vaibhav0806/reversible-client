@@ -111,7 +111,7 @@ export default function ProfilePage() {
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-balance/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-balance/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -149,7 +149,7 @@ export default function ProfilePage() {
   const fetchTransactionHistory = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-transactions/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-transactions/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -180,7 +180,7 @@ export default function ProfilePage() {
   const fetchUserDisputes = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-disputes/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-disputes/${walletAddress}`,
         {
           method: "GET",
           headers: {

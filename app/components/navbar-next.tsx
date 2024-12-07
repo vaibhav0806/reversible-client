@@ -92,18 +92,15 @@ export function NavbarN() {
 
         console.log("User Details:", decodedCredential);
 
-        // Call the API
-        const response = await fetch(
-          "http://127.0.0.1:8000/auth/create-wallet",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ email: decodedCredential.email }),
-          }
-        );
+            // Call the API
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/create-wallet`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ email: decodedCredential.email }),
+            });
 
         if (!response.ok) {
           throw new Error();
@@ -130,7 +127,7 @@ export function NavbarN() {
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/users/get-user-balance/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-balance/${walletAddress}`,
         {
           method: "GET",
           headers: {
