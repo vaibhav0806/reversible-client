@@ -312,9 +312,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, AlertCircle } from "lucide-react";
+import { Info, AlertCircle, Wallet } from "lucide-react";
 import { CircleHelp } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
 
 interface Transaction {
   id: string;
@@ -356,34 +356,15 @@ const TransactionReversalPage: React.FC = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [walletData, setWalletData] = useState<any>(null);
+  const [walletData, setWalletData] = useState<any>(null); 
+
   const [loading, setLoading] = useState(false);
-  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
-
-  const loadingMessages = [
-    "submitting dispute ...",
-    "AI judging ....",
-    "almost there ....",
-  ];
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (loading) {
-      interval = setInterval(() => {
-        setLoadingMessageIndex((prevIndex) => {
-          const nextIndex = prevIndex + 1;
-          return nextIndex < loadingMessages.length ? nextIndex : prevIndex;
-        });
-      }, 5000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [loading]);
+  const [statusText, setStatusText] = useState("Submit Reversal Request");
 
   useEffect(() => {
     // Retrieve transaction ID and transfer data from route
-    const transferDataEncoded = searchParams.get("transferData");
+    const transactionId = searchParams.get('transactionId');
+    const transferDataEncoded = searchParams.get('transferData');
     const storedWalletData = localStorage.getItem("walletData");
 
     if (storedWalletData) {
@@ -399,7 +380,7 @@ const TransactionReversalPage: React.FC = () => {
       try {
         // Decode and parse the transfer data
         const parsedTransfer = JSON.parse(decodeURIComponent(transferDataEncoded));
-
+        
         // Convert created_at to a Date object
         const transactionDetails = {
           ...parsedTransfer,
@@ -411,7 +392,7 @@ const TransactionReversalPage: React.FC = () => {
 
         setTransaction(transactionDetails);
       } catch (error) {
-        console.error("Error parsing transfer data:", error);
+        console.error('Error parsing transfer data:', error);
         toast({
           title: "Error",
           description: "Could not load transaction details",
@@ -425,7 +406,7 @@ const TransactionReversalPage: React.FC = () => {
         variant: "destructive"
       });
     }
-  }, [searchParams, toast]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,61 +415,74 @@ const TransactionReversalPage: React.FC = () => {
       toast({
         title: "Error",
         description: "No transaction selected for reversal",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
 
-    try {
-      setLoading(true);
-      setLoadingMessageIndex(0);
+    // Start loading process
+    setLoading(true);
+    setStatusText("Submitting...");
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/disputes/raise-dispute`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({
-            wallet: walletData,
-            request: {
-              transaction_id: transaction.id.toString(),
-              to_wallet: transaction.to_wallet,
-              proofTitle: title,
-              proofContent: message,
-            },
-          }),
-        }
-      );
+    // Timers to update the button text
+    setTimeout(() => {
+      // After 7 seconds
+      if (loading) {
+        setStatusText("AI Thinking...");
+      }
+    }, 7000);
+
+    setTimeout(() => {
+      // After 15 seconds total
+      if (loading) {
+        setStatusText("Almost there...");
+      }
+    }, 15000);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/disputes/raise-dispute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json'
+        },
+        body: JSON.stringify({
+           wallet: walletData,
+           request:{
+            transaction_id: transaction.id.toString(),
+            to_wallet: transaction.to_wallet,
+            proofTitle: title,
+            proofContent: message
+           }     
+        })
+      });
 
       const responseData = await response.json();
 
-      if (responseData.status === "success") {
+      if (responseData.status === 'success') {
         toast({
           title: "Success",
           description: "Reversal request submitted successfully",
-          variant: "default",
+          variant: "default"
         });
-        // Optionally redirect or clear form
-        router.push("/profile");
+        router.push('/profile');
       } else {
         toast({
           title: "Error",
           description: responseData.message || "Failed to submit reversal request",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Reversal request error:", error);
+      console.error('Reversal request error:', error);
       toast({
         title: "Error",
         description: "An error occurred while submitting the reversal request",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
+      setStatusText("Submit Reversal Request");
     }
   };
 
@@ -603,18 +597,18 @@ const TransactionReversalPage: React.FC = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 transition-all duration-300 text-black font-bold py-3 rounded-lg flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 transition-all duration-300 text-white font-bold py-3 rounded-lg flex items-center justify-center"
                 disabled={loading}
               >
                 {loading && (
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                   >
                     <circle
-                      className="opacity-25 stroke-black"
+                      className="opacity-25"
                       cx="12"
                       cy="12"
                       r="10"
@@ -622,13 +616,13 @@ const TransactionReversalPage: React.FC = () => {
                       strokeWidth="4"
                     ></circle>
                     <path
-                      className="opacity-75 fill-black"
+                      className="opacity-75"
                       fill="currentColor"
                       d="M4 12a8 8 0 018-8v8H4z"
                     ></path>
                   </svg>
                 )}
-                {loading ? loadingMessages[loadingMessageIndex] : "Submit Reversal Request"}
+                {statusText}
               </Button>
             </form>
           </CardContent>
