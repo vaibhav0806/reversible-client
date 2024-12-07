@@ -43,12 +43,7 @@ export default function DAODisputesPage() {
   useEffect(() => {
     const fetchDisputes = async () => {
       try {
-        const response = await fetch('https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/disputes/get-disputes');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/disputes/get-disputes`);
         const data = await response.json();
         if (data.status === 'success') {
           setDisputes(data.data);

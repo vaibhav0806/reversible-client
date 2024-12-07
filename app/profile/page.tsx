@@ -94,7 +94,7 @@ export default function ProfilePage() {
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-balance/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-balance/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -132,7 +132,7 @@ export default function ProfilePage() {
   const fetchTransactionHistory = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-transactions/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-transactions/${walletAddress}`,
         {
           method: "GET",
           headers: {
@@ -163,7 +163,7 @@ export default function ProfilePage() {
   const fetchUserDisputes = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `/https://xerothermic-arlina-abhishek740-454a2f98.koyeb.app/users/get-user-disputes/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-disputes/${walletAddress}`,
         {
           method: "GET",
           headers: {
