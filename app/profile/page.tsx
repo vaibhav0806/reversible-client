@@ -132,7 +132,7 @@ export default function ProfilePage() {
   const fetchTransactionHistory = async (walletAddress: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-transactions/${walletAddress}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${walletAddress}`,
         {
           method: "GET",
           headers: {
