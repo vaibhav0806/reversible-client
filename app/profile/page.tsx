@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, History, CircleAlert, CircleCheck, CircleHelp, Undo2 } from 'lucide-react';
+import { Wallet, History, CircleAlert, CircleCheck, CircleHelp, Undo2, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation';
 import { Toaster } from "@/components/ui/toaster";
@@ -39,32 +39,51 @@ interface Dispute {
   dispute_count: string;
 }
 
-const STATUS_CONFIGS = {
-  completed: { color: 'bg-green-100 text-green-800 border-green-200', icon: <CircleCheck className="w-4 h-4 text-green-600" /> },
-  pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: <CircleHelp className="w-4 h-4 text-yellow-600" /> },
-  disputed: { color: 'bg-red-100 text-red-800 border-red-200', icon: <CircleAlert className="w-4 h-4 text-red-600" /> },
-  reversed: { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: <Undo2 className="w-4 h-4 text-gray-600" /> },
+type TransactionState = 'completed' | 'pending' | 'disputed' | 'reversed';
+
+const STATUS_CONFIGS: Record<TransactionState, { color: string; icon: JSX.Element }> = {
+  completed: {
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: <CircleCheck className="w-4 h-4 text-green-600" />,
+  },
+  pending: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <CircleHelp className="w-4 h-4 text-yellow-600" />,
+  },
+  disputed: {
+    color: 'bg-red-100 text-red-800 border-red-200',
+    icon: <CircleAlert className="w-4 h-4 text-red-600" />,
+  },
+  reversed: {
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: <Undo2 className="w-4 h-4 text-gray-600" />,
+  },
 };
 
 export default function ProfilePage() {
   const { toast } = useToast()
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'sent' | 'received' | 'issues'>('sent');
-  
+
   // State for dynamic data
   const [userData, setUserData] = useState<UserData | null>(null);
   const [sentTransferHistory, setSentTransferHistory] = useState<Transaction[]>([]);
   const [receivedTransferHistory, setReceivedTransferHistory] = useState<Transaction[]>([]);
   const [userDisputes, setUserDisputes] = useState<Dispute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [walletData, setWalletData] = useState<any>(null);
+  const [isForcing, setIsForcing] = useState<boolean>(false);
+
 
   useEffect(() => {
     // Retrieve wallet address from local storage
     const storedWalletData = localStorage.getItem('walletData');
-    
+
     if (storedWalletData) {
       try {
         const parsedWalletData = JSON.parse(storedWalletData);
+        setWalletData(parsedWalletData);
+
         const walletAddress = parsedWalletData.address_id;
 
         // Fetch all required data
@@ -93,6 +112,132 @@ export default function ProfilePage() {
     }
   }, []);
 
+
+
+  const isClaimButtonEnabled = (transactionCreatedAt: string): boolean => {
+    const transactionTime = new Date(transactionCreatedAt).getTime();
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - transactionTime;
+
+    // 12 hours in milliseconds = 12 * 60 * 60 * 1000
+    const twelveHoursInMs = 60 * 1000;
+
+    return timeDifference > twelveHoursInMs;
+  };
+
+  const handleWithdraw = async (transaction: Transaction) => {
+    try {
+      const storedWalletData = localStorage.getItem('walletData');
+      if (!storedWalletData) {
+        throw new Error('No wallet data found');
+      }
+      // console.log(transaction);
+
+      const id = transaction.id.toString();
+
+      console.log(storedWalletData);
+      console.log(typeof (transaction.to_wallet), typeof (id));
+
+      setIsForcing(true)
+
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/force-approval`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+            wallet: walletData,
+            request: {
+              transaction_id: id,
+              to_wallet: transaction.to_wallet
+            }
+          })
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (responseData.status === "success") {
+        toast({
+          title: "Success",
+          description: "Transaction withdrawn successfully",
+          variant: "default"
+        });
+
+
+      }
+    } catch (error) {
+      console.error("Error withdrawing transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Could not withdraw transaction",
+        variant: "destructive"
+      });
+    }
+    finally {
+      setIsForcing(false)
+    }
+  };
+
+
+  const handleClaim = async (transferId: number) => {
+    try {
+      const storedWalletData = localStorage.getItem('walletData');
+      if (!storedWalletData) {
+        throw new Error('No wallet data found');
+      }
+
+      const parsedWalletData = JSON.parse(storedWalletData);
+      // console.log(transfer);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/users/claim`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+          body: JSON.stringify({
+            wallet: parsedWalletData,
+            request: {
+              transaction_id: transferId.toString()
+            }
+          })
+        }
+      );
+
+      const responseData = await response.json();
+
+      console.log(responseData);
+
+
+      if (responseData.status === "success") {
+        toast({
+          title: "Success",
+          description: "Transaction claimed successfully",
+          variant: "default"
+        });
+
+        // Optionally refresh the transaction     
+      } else {
+        throw new Error(responseData.message || "Failed to claim transaction");
+      }
+    } catch (error) {
+      console.error("Error claiming transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Could not claim transaction",
+        variant: "destructive"
+      });
+    }
+  };
+
+
   const fetchWalletBalances = async (walletAddress: string) => {
     try {
       const response = await fetch(
@@ -104,16 +249,16 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success" && responseData.data.length > 0) {
         const userBalanceData = responseData.data[0];
-        
+
         setUserData({
           email: userBalanceData.email,
           walletAddress: userBalanceData.wallet_address,
@@ -142,13 +287,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setSentTransferHistory(responseData.data);
       }
@@ -173,13 +318,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setReceivedTransferHistory(responseData.data);
       }
@@ -204,13 +349,13 @@ export default function ProfilePage() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (responseData.status === "success") {
         setUserDisputes(responseData.data);
       }
@@ -234,7 +379,7 @@ export default function ProfilePage() {
     });
   };
 
-  const handleDispute = (transaction : Transaction ) => {
+  const handleDispute = (transaction: Transaction) => {
     const transferData = encodeURIComponent(JSON.stringify(transaction))
     router.push(`/request?transactionId=${transaction.id}&transferData=${transferData}`);
   };
@@ -257,7 +402,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-center text-lg font-semibold bg-gradient-to-r from-emerald-400 to-green-500 text-white py-2 rounded-md">
             User Profile
@@ -333,7 +478,7 @@ export default function ProfilePage() {
                         <p className="font-semibold">{transfer.amount} NR</p>
                         <Badge
                           variant="outline"
-                          className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
+                          className={`${STATUS_CONFIGS[transfer.state as TransactionState]?.color || ''} capitalize`}
                         >
                           {transfer.state}
                         </Badge>
@@ -346,14 +491,32 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center space-x-4">
                         {transfer.state === 'pending' && (
-                          <Button 
-                            className="bg-red-500 text-white hover:bg-red-600" 
-                            onClick={() => handleDispute(transfer)}
-                          >
-                            Reverse
-                          </Button>
+                          <>
+                            <Button
+                              className="bg-red-500 text-white hover:bg-red-600"
+                              onClick={() => handleDispute(transfer)}
+                            >
+                              Reverse
+                            </Button>
+                            <Button
+                              className="bg-blue-500 text-white hover:bg-blue-600"
+                              onClick={() => handleWithdraw(transfer)}
+                            >
+
+                              {isForcing ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Loading...
+                                </>
+                              ) : (
+                                "Force"
+                              )}
+
+                            </Button>
+                          </>
+
                         )}
-                        {STATUS_CONFIGS[transfer.state]?.icon}
+                        {STATUS_CONFIGS[transfer.state as TransactionState]?.icon}
                       </div>
                     </CardContent>
                   </Card>
@@ -376,7 +539,7 @@ export default function ProfilePage() {
                         <p className="font-semibold">{transfer.amount} NR</p>
                         <Badge
                           variant="outline"
-                          className={`${STATUS_CONFIGS[transfer.state]?.color || ''} capitalize`}
+                          className={`${STATUS_CONFIGS[transfer.state as TransactionState]?.color || ''} capitalize`}
                         >
                           {transfer.state}
                         </Badge>
@@ -389,23 +552,28 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center space-x-4">
                         {transfer.state === 'pending' && (
-                          <Button 
-                          className=" bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600" 
-                          onClick={() => handleDispute(transfer.id)}
-                        >
-                          Claim
-                        </Button>
-                      )}
-                      {STATUS_CONFIGS[transfer.state]?.icon}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
+                          <Button
+                            className={`
+                      bg-gradient-to-r from-emerald-400 to-green-500 
+                      hover:from-emerald-500 hover:to-green-600
+                      ${!isClaimButtonEnabled(transfer.created_at) ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                            onClick={() => isClaimButtonEnabled(transfer.created_at) && handleClaim(transfer.id)}
+                            disabled={!isClaimButtonEnabled(transfer.created_at)}
+                          >
+                            Claim
+                          </Button>
+                        )}
+                        {STATUS_CONFIGS[transfer.state as TransactionState]?.icon}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
 
-{activeTab === 'issues' && (
+          {activeTab === 'issues' && (
             <div className="space-y-6">
               {userDisputes.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
