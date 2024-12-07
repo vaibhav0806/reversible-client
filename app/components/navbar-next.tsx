@@ -156,6 +156,11 @@ export function NavbarN() {
     // Reset previous error
     setTransferError(null);
 
+    if(walletAddress == recipientAddress){
+      setTransferError("Recipient address is the same as Your Address");
+      return;
+    }
+
     // Validation checks
     if (!recipientAddress) {
       setTransferError("Recipient address is required.");
