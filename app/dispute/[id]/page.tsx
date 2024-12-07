@@ -56,7 +56,6 @@ const DisputePage = ({ params}: Props) => {
   const [isJudge, setIsJudge] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [votes, setVotes] = useState<any>(null)
   const [senderTransactions, setSenderTransactions] = useState<Transaction[]>(
     []
   );
@@ -69,9 +68,12 @@ const DisputePage = ({ params}: Props) => {
   const [activeTab, setActiveTab] = useState("sender-history");
 
   // Voting data (mock for now)
-  const [votingData, setVotingData] = useState({
-    yes: 65,
-    no: 35,
+  const [votingData, setVotes] = useState({
+    "status": "success",
+    "data": {
+      "yes": 0,
+      "no": 0
+    }
   });
 
   useEffect(() => {
@@ -271,6 +273,7 @@ const DisputePage = ({ params}: Props) => {
         );
         const responseWait = await response.json();
         console.log("judge is :", responseWait);
+        setIsJudge(responseWait.data)
 
         if (response.ok) {
           // console.log(responseWait);
@@ -381,13 +384,13 @@ const DisputePage = ({ params}: Props) => {
                   <div className="flex justify-between mb-2">
                     <span>Approve</span>
                     {isVotingPeriodComplete(dispute.created_at) && (
-                      <span>{votingData.yes}</span>
+                      <span>{votingData.data.yes}</span>
                     )}
                   </div>
                   <Progress
                     value={
                       isVotingPeriodComplete(dispute.created_at)
-                        ? votingData.yes
+                        ? votingData.data.yes
                         : 0
                     }
                     className={`h-2 ${
@@ -403,13 +406,13 @@ const DisputePage = ({ params}: Props) => {
                   <div className="flex justify-between mb-2">
                     <span>Reject</span>
                     {isVotingPeriodComplete(dispute.created_at) && (
-                      <span>{votingData.no}</span>
+                      <span>{votingData.data.no}</span>
                     )}
                   </div>
                   <Progress
                     value={
                       isVotingPeriodComplete(dispute.created_at)
-                        ? votingData.no
+                        ? votingData.data.no
                         : 0
                     }
                     className={`h-2 ${
