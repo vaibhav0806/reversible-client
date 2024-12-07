@@ -77,7 +77,7 @@
 //   useEffect(() => {
 //     const fetchSenderTransactionHistory = async () => {
 //       const response = await fetch(
-//         `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.from_wallet}`
+//         `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${transaction?.from_wallet}`
 //       );
 //       const responseWait = await response.json();
 //       const data = responseWait.data.slice(0, 5)
@@ -85,7 +85,7 @@
 //       console.log(data)
   
 //       const response2 = await fetch(
-//         `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.from_wallet}`
+//         `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-received-transactions/${transaction?.from_wallet}`
 //       );
 //       const responseWait2 = await response2.json();
 //       const data2 = responseWait2.data.slice(0, 5);
@@ -95,7 +95,7 @@
   
 //     const fetchReceiverTransactionHistory = async () => {
 //       const response = await fetch(
-//         `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.to_wallet}`
+//         `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${transaction?.to_wallet}`
 //       );
 //       const responseWait = await response.json();
 //       const data = responseWait.data.slice(0, 5)
@@ -103,7 +103,7 @@
 //       setReceiverTransactions(data)
   
 //       const response2 = await fetch(
-//         `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.to_wallet}`
+//         `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-received-transactions/${transaction?.to_wallet}`
 //       );
 //       const responseWait2 = await response2.json();
 //       const data2 = responseWait2.data.slice(0, 5)
@@ -128,7 +128,7 @@
 //         try {
 //           console.log("get dispute")
 //           const response = await fetch(
-//             `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/get-dispute/${params.id}`
+//             `${process.env.NEXT_PUBLIC_BASE_URL}/disputes/get-dispute/${params.id}`
 //           );
 //           const responseWait = await response.json();
 //           const data = responseWait.data[0];
@@ -157,7 +157,7 @@
 //         console.log("get votes")
 //         // console.log(dispute)
 //         const response = await fetch(
-//           `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/getVotes/${dispute?.id}`
+//           `${process.env.NEXT_PUBLIC_BASE_URL}/disputes/getVotes/${dispute?.id}`
 //         );
 //         const responseWait = await response.json();
 //         const data = responseWait.data[0];
@@ -195,7 +195,7 @@
 //       } 
 //       // console.log("payload is : ", payload)
 //       const response = await fetch(
-//         `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/judges/vote`,
+//         `${process.env.NEXT_PUBLIC_BASE_URL}/judges/vote`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -226,7 +226,7 @@
 //         console.log("get transaction")
 //         // console.log(dispute)
 //         const response = await fetch(
-//           `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/transactions/get-transactions/${dispute?.transactionId}`
+//           `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/get-transactions/${dispute?.transactionId}`
 //         );
 //         const responseWait = await response.json();
 //         const data = responseWait.data[0];
@@ -259,7 +259,7 @@
 //         }
 //         // console.log("payload is : ", payload)
 //         const response = await fetch(
-//           `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/isJudge`,
+//           `${process.env.NEXT_PUBLIC_BASE_URL}/users/isJudge`,
 //           {
 //             method: "POST",
 //             headers: {
@@ -597,13 +597,13 @@ const DisputePage = ({ params }: Props) => {
     const fetchSenderTransactionHistory = async () => {
       if (transaction?.from_wallet) {
         const response = await fetch(
-          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.from_wallet}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${transaction?.from_wallet}`
         );
         const responseWait = await response.json();
         const data = responseWait.data.slice(0, 5);
 
         const response2 = await fetch(
-          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.from_wallet}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-received-transactions/${transaction?.from_wallet}`
         );
         const responseWait2 = await response2.json();
         const data2 = responseWait2.data.slice(0, 5);
@@ -615,13 +615,13 @@ const DisputePage = ({ params }: Props) => {
     const fetchReceiverTransactionHistory = async () => {
       if (transaction?.to_wallet) {
         const response = await fetch(
-          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-sent-transactions/${transaction?.to_wallet}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-sent-transactions/${transaction?.to_wallet}`
         );
         const responseWait = await response.json();
         const data = responseWait.data.slice(0, 5);
 
         const response2 = await fetch(
-          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/get-user-received-transactions/${transaction?.to_wallet}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/users/get-user-received-transactions/${transaction?.to_wallet}`
         );
         const responseWait2 = await response2.json();
         const data2 = responseWait2.data.slice(0, 5);
@@ -641,7 +641,7 @@ const DisputePage = ({ params }: Props) => {
       if (params.id) {
         try {
           const response = await fetch(
-            `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/get-dispute/${params.id}`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/disputes/get-dispute/${params.id}`
           );
           const responseWait = await response.json();
           const data = responseWait.data[0];
@@ -667,7 +667,7 @@ const DisputePage = ({ params }: Props) => {
       if (dispute?.id) {
         try {
           const response = await fetch(
-            `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/disputes/getVotes/${dispute?.id}`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/disputes/getVotes/${dispute?.id}`
           );
           const responseWait = await response.json();
           const data = responseWait.data[0];
@@ -703,7 +703,7 @@ const DisputePage = ({ params }: Props) => {
       };
 
       const response = await fetch(
-        `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/judges/vote`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/judges/vote`,
         {
           method: "POST",
           headers: {
@@ -730,7 +730,7 @@ const DisputePage = ({ params }: Props) => {
       if (dispute?.transactionId) {
         try {
           const response = await fetch(
-            `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/transactions/get-transactions/${dispute?.transactionId}`
+            `${process.env.NEXT_PUBLIC_BASE_URL}/transactions/get-transactions/${dispute?.transactionId}`
           );
           const responseWait = await response.json();
           const data = responseWait.data[0];
@@ -761,7 +761,7 @@ const DisputePage = ({ params }: Props) => {
         };
 
         const response = await fetch(
-          `https://plain-brandy-dhrupad-f7f7afc1.koyeb.app/users/isJudge`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/users/isJudge`,
           {
             method: "POST",
             headers: {
