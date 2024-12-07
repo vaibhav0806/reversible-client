@@ -234,8 +234,9 @@ export default function ProfilePage() {
     });
   };
 
-  const handleDispute = (transactionId: number) => {
-    router.push(`/request?transactionId=${transactionId}`);
+  const handleDispute = (transaction : Transaction ) => {
+    const transferData = encodeURIComponent(JSON.stringify(transaction))
+    router.push(`/request?transactionId=${transaction.id}&transferData=${transferData}`);
   };
 
   if (isLoading) {
@@ -347,7 +348,7 @@ export default function ProfilePage() {
                         {transfer.state === 'pending' && (
                           <Button 
                             className="bg-red-500 text-white hover:bg-red-600" 
-                            onClick={() => handleDispute(transfer.id)}
+                            onClick={() => handleDispute(transfer)}
                           >
                             Reverse
                           </Button>
@@ -389,10 +390,10 @@ export default function ProfilePage() {
                       <div className="flex items-center space-x-4">
                         {transfer.state === 'pending' && (
                           <Button 
-                          className="bg-red-500 text-white hover:bg-red-600" 
+                          className=" bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600" 
                           onClick={() => handleDispute(transfer.id)}
                         >
-                          Reverse
+                          Claim
                         </Button>
                       )}
                       {STATUS_CONFIGS[transfer.state]?.icon}
