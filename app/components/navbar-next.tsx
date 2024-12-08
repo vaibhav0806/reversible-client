@@ -277,7 +277,7 @@ export function NavbarN() {
             <NavbarBrand className="flex gap-1">
                 <AcmeLogo />
                 <a href="/">
-                    <p className="font-bold text-inherit tracking-wider">REVERS</p>
+                    <p className="font-bold text-inherit tracking-wider">RETRACE</p>
                 </a>
             </NavbarBrand>
             <NavbarContent className="sm:flex gap-7" justify="center">
