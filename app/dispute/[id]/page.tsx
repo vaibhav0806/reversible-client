@@ -177,6 +177,11 @@ const DisputePage = ({ params }: Props) => {
 
   const vote = async () => {
     try {
+      let vd;
+      if (voteDecision==="approve")
+        vd = "1"
+      else
+        vd = "2"
       const payload = {
         wallet: {
           address_id: JSON.parse(localStorage.getItem("walletData")!).address_id,
@@ -184,8 +189,8 @@ const DisputePage = ({ params }: Props) => {
           network_id: JSON.parse(localStorage.getItem("walletData")!).network_id,
         },
         request: {
-          dispute_id: dispute?.id,
-          vote: voteDecision,
+          dispute_id: dispute?.id.toString(),
+          vote: vd,
         },
       };
 
@@ -201,6 +206,7 @@ const DisputePage = ({ params }: Props) => {
         }
       );
       const responseWait = await response.json();
+      console.log("vote response is : ", responseWait);
 
       if (!response.ok) {
         console.error("Error fetching vote:", responseWait);
